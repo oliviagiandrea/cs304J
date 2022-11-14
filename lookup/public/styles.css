@@ -1,0 +1,10 @@
+h1 {
+  font-size: 200%;
+}
+
+.title { color: #00ccff; }
+.person { color: #00cc55; }
+
+.search {
+  border: 2px solid #ccf;
+}

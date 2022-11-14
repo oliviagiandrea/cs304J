@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>WMDB</title>
+    <!-- load local stylesheet (css) -->
+    <link rel="stylesheet" href="/styles.css" />
+    <!-- loading jquery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+</head>
+<body>
+    <% if (error) { %>
+    <h2 style="color: maroon;"><%= error %></h2><br>
+    <% } %>
+
+    <form class="search" method="GET" action="/query">
+        <p><label>search: <input type="text" required name="query"></label>
+        <label>kind
+                <select required name="kind">
+                    <option value="">choose one</option>
+                    <option value="person">person name</option>
+                    <option value="movie">movie title</option>
+                </select>
+        </label>
+        <input type="submit" value="search"></p>
+    </form>
+
+    <% if (people) { %>
+        <p>People matching <%= query %>: </p>
+        <ol>
+            <% for (var i=0; i < people.length; i++) { %>
+            <li><a href="../nm/<%= people[i].nm %>"><%= people[i].name %> born on <%= people[i].birthdate %></a></li>
+            <% } %>
+        </ol>
+    <% } %>
+
+    <% if (movies) { %>
+        <p>Movies matching <%= query %>: </p>
+        <ol>
+            <% for (var i=0; i < movies.length; i++) { %>
+            <li><a href="../tt/<%= movies[i].tt %>"><%= movies[i].title %> released in <%= movies[i].release %></a></li>
+            <% } %>
+        </ol>
+    <% } %>
+                
+    
+    <h1>About</h1>
+    
+    <p>This application is a simple knockoff of the 
+        <a href="https://www.imdb.com/">IMDB</a>
+    </p>
+    
+    <p>An example of an actor: 
+        <a href="/nm/123">George Clooney</a></p>
+    
+    <p>An example of a movie: 
+        <a href="/tt/120780">Out of Sight (1998)</a></p>
+    
+    <p>V 1.0, Nov 11, 2022</p>
+
+    <!-- load local js -->
+    <script src="/main.js"></script>
+</body>
+</html>

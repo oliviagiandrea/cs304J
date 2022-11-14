@@ -1,0 +1,38 @@
+.formcontainer {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.container {
+  display: flex;
+  flex-direction: column-reverse;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.row {
+  display: flex;
+  flex-direction: row-reverse;
+  justify-content: space-between;
+  margin: auto 2rem auto 2rem;
+  height: max-content;
+}
+
+.col3 {
+  display: flex;
+  flex-direction: column-reverse;
+  justify-content: center;
+  max-width: 30%;
+  min-height: 350px;
+}
+
+.uploadedImg {
+  max-height: 300px;
+  max-width: 100%;
+}
+
+.imgTitle {
+  text-align: center;
+  margin-block-start: 0px;
+}

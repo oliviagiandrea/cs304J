@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Multer Upload Example</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <!-- loading jquery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <!-- loading fontawesome (tiny icons!) -->
+    <script src="https://kit.fontawesome.com/4266217451.js" crossorigin="anonymous"></script>
+</head>
+<body>
+    <h1>Multer Upload Example</h1>
+
+    <form action="/upload" method="POST" enctype="multipart/form-data">
+      <label for="title">title</label>
+      <input type="text" name="title" placeholder="photo title">
+      <br />
+      <input type="file" accept="image/*" name="photo" >
+
+      <br /><br />
+      <input type="reset" value="Reset">
+      <input type="submit" value="Submit Uploads">
+    </form>
+
+    <h2>all uploads</h2></div><br><br>
+    <div class="container">
+      <% for(var j = 0; j < uploads.length; j++) {%>
+        <% if (j === 0 || j % 3 === 0) { %>
+        <div class="row">
+        <% } %>
+          <div class="col3">
+            <div class="imgWrap">
+              <img class="uploadedImg" src="/imgs/<%= uploads[j].imagepath %>" alt="uploaded image #<%= j %>">
+              <h2 class="imgTitle"><%= uploads[j].title %></h2>
+            </div>
+          </div>
+        <% if ((j+1) % 3 === 0 || j === uploads.length-1) { %>
+        </div>
+        <% } %>
+      <% } %>
+    </div>
+
+    <!-- load local js -->
+    <script src="/main.js"></script>
+</body>
+</html>
