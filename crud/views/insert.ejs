@@ -1,0 +1,31 @@
+<%- include('header') -%>
+
+<h1>Insert Movie</h1>
+
+<form method="post" action="/insert">
+  <fieldset>
+    <legend>Movie Data</legend>
+    <table>
+      <tr>
+        <td><label for="movieTt" accesskey="i">(i) Movie ID/TT:</label></td>
+        <td><input id="movieTt" type="text" name="movieTt" /></td>
+      </tr>
+      <tr>
+        <td><label for="movieTitle" accesskey="t">(t) Movie Title:</label></td>
+        <td><input id="movieTitle" type="text" name="movieTitle" /></td>
+      </tr>
+      <tr>
+        <td>
+          <label for="movieRelease" accesskey="r"
+            >(r) Movie Release Year:</label
+          >
+        </td>
+        <td><input id="movieRelease" type="text" name="movieRelease" /></td>
+      </tr>
+    </table>
+  </fieldset>
+
+  <p><input type="submit" value="Insert Movie" /></p>
+</form>
+
+<%- include('footer') -%>

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Home - CS304 Flask Assignment</title>
+    <!-- load local stylesheet (css) -->
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div id="navigation">
+      <ul>
+        <li><a href="/">Home</a></li>
+        <li><a href="/insert">Insert A Movie</a></li>
+        <li><a href="/search">Search by Title</a></li>
+        <li><a href="/select">Select from Incomplete Movies</a></li>
+      </ul>
+    </div>
+
+    <% if (error) { %>
+      <% for (var i=0; i < error.length; i++) {%>
+        <h2 style="color: maroon;"><%= error[i] %></h2><br>
+      <% } %>
+    <% } %>
+
+    <div id="content">

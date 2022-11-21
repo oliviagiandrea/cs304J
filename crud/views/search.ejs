@@ -1,0 +1,11 @@
+<%- include('header') -%>
+
+<h1>Search by Title</h1>
+
+<form method="POST" action="/search">
+  <label for="searchTitle">Title: </label>
+  <input id="searchTitle" name="searchTitle" value="" />
+  <input type="submit" name="submit-btn" value="Search" />
+</form>
+
+<%- include('footer') -%>

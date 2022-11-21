@@ -1,0 +1,17 @@
+<%- include('header') -%>
+
+<h1>Select Movie</h1>
+
+<form method="POST" action="/select/">
+  <label for="menuTt">Movies without release dates or directors:</label>
+  <select id="menuTt" name="menuTt">
+    <option value="none">Choose One</option>
+    <!--Fills out the drop down menu with incomplete movies-->
+    <% for (var i=0; i < movies.length; i++) {%>
+      <option value="<%= movies[i].tt %>"><%= movies[i].title %></option>
+    <% } %>
+  </select>
+  <input type="submit" name="submit-btn" value="Choose" />
+</form>
+
+<%- include('footer') -%>

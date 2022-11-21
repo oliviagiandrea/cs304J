@@ -1,0 +1,70 @@
+<%- include('header') -%>
+
+<h1>Update Movie</h1>
+
+<p>
+  Use "None" or "null" to set a field to null. Only Title, Release Year and
+  Director can be null.
+</p>
+
+<form method="POST" action="/update/<%= movie.tt %>">
+  <table>
+    <tr>
+      <td><label for="movieTitle">Title</label></td>
+      <td>
+        <% if (movie?.title) {%>
+          <input id="movieTitle" name="movieTitle" value="<%= movie.title %>" />
+        <% } else { %>
+          <input id="movieTitle" name="movieTitle" value="null" />
+        <% } %>
+      </td>
+    </tr>
+    <tr>
+      <td><label for="movieTt">Movie id</label></td>
+      <td><input id="movieTt" name="movieTt" value="<%= movie.tt %>" /></td>
+    </tr>
+    <tr>
+      <td><label for="movieRelease">Release year</label></td>
+      <td>
+        <% if (movie?.release) {%>
+          <input id="movieRelease" name="movieRelease" value="<%= movie.release %>" />
+        <% } else { %>
+          <input id="movieRelease" name="movieRelease" value="null" />
+        <% } %>
+      </td>
+    </tr>
+    <tr>
+      <td><label for="movieAddedby">Added by</label></td>
+      <td>
+        <% if (movie.addedby?.uid) {%>
+          <input id="movieAddedby" name="movieAddedby" value="<%= movie.addedby.uid %>" />
+        <% } else { %>
+          <input id="movieAddedby" name="movieAddedby" value="null" />
+        <% } %>
+      </td>
+    </tr>
+    <tr>
+      <td><label for="movieDirector">Director ID</label></td>
+      <td>
+        <% if (movie.director?.nm) {%>
+          <input id="movieDirector" name="movieDirector" value="<%= movie.director.nm %>" />
+        <% } else { %>
+          <input id="movieDirector" name="movieDirector" value="null" />
+        <% } %>
+      </td>
+    </tr>
+    <tr>
+      <td><label>Director</label></td>
+      <% if (movie.director?.name) {%>
+        <td><%= movie.director.name %></td>
+      <% } else { %>
+        <td>None Specified</td>
+      <% } %>
+      
+    </tr>
+  </table>
+  <input type="submit" name="submit" value="update" />
+  <input type="submit" name="submit" value="delete" />
+</form>
+
+<%- include('footer') -%>

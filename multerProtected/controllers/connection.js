@@ -3,7 +3,7 @@ const MongoClient = require('mongodb').MongoClient;
 class Connection {
     static async open() {
         if (this.db) return this.db;
-        this.db = await MongoClient.connect(this.url, this.options);
+        this.db = await MongoClient.connect(this.url, this.options).db("wmdb");
         return this.db;
     }
 }

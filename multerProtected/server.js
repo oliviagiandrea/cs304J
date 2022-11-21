@@ -39,7 +39,7 @@ app.use('/uploads', async (req, res, next) => {
       console.log("let's see if you're authorized....");
       // if user is logged in, are they the uploader of the photo?
       await Connection.open();
-      const author = await Connection.db.db('uploadTest').collection('uploads').findOne({imagePath: req.originalUrl.slice(1)});
+      const author = await Connection.db.collection('uploads').findOne({imagePath: req.originalUrl.slice(1)});
       if (!author) {
         console.log("Error: Photo titled", req.originalUrl.slice(9), "does not exist in uploads.");  // display error message
         return res.redirect('/photos/' + uId);
