@@ -6,9 +6,11 @@ const bodyParser= require('body-parser');
 const multer = require('multer');
 const app = express();
 
-const { MongoClient, ServerApiVersion } = require('mongodb');
-const uri = "mongodb+srv://og102:asm707@cluster0.dn6vs.mongodb.net/?retryWrites=true&w=majority";
-const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
+const { Connection } = require('./connection.js');
+app.use(async function(req, res, next) {
+  await Connection.open();
+  next();
+});
 
 app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -26,37 +28,30 @@ var storage = multer.diskStorage({
 })
 var upload = multer({ storage: storage })
 
-client.connect(function(err, db) {
-	if (err) throw err;
-  console.log('Connected to Database');
-  const dbo = db.db('uploadTest');
-	const uploads = dbo.collection('uploads');
+app.get('/', (req, res) => {
+  uploads.find().toArray()
+  .then(results => {
+    res.render('index.ejs', {uploads: results});
+  })
+  .catch(error => console.error(error));
+});
 
-  app.get('/', (req, res) => {
-    uploads.find().toArray()
+app.post('/upload', upload.single('photo'), (req, res) => {
+  // get data from form
+  var upload_data = req.body;
+  console.log(upload_data);
+  // add filepath
+  var fPath = (req.file.path).replace("public/imgs/", "");
+  console.log(fPath);
+  upload_data['imagepath'] = fPath;
+  // insert recipe into mongodb
+  Connection.db.collection("uploads").insertOne(upload_data)
     .then(results => {
-      res.render('index.ejs', {uploads: results});
+      res.redirect('/');
     })
-    .catch(error => console.error(error));
-  });
+    .catch(error => console.error(error))
+});
 
-  app.post('/upload', upload.single('photo'), (req, res) => {
-    // get data from form
-    var upload_data = req.body;
-    console.log(upload_data);
-    // add filepath
-    var fpath = (req.file.path).replace("public/imgs/", "");
-    console.log(fpath);
-    upload_data['imagepath'] = fpath;
-    // insert recipe into mongodb
-    uploads.insertOne(upload_data)
-      .then(results => {
-        res.redirect('/');
-      })
-      .catch(error => console.error(error))
-  });
-
-  app.listen(3000, function() {
-    console.log('listening on 3000');
-  });
-})
+app.listen(3000, function() {
+  console.log('listening on 3000');
+});

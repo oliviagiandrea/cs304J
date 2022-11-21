@@ -1,4 +1,3 @@
-require("dotenv").config()
 const express = require('express');
 const bodyParser = require('body-parser');
 const app = express();
@@ -8,9 +7,11 @@ app.use(bodyParser.json());
 app.use(express.static('public'));
 app.set('view engine', 'ejs');
 
-const { MongoClient, ServerApiVersion } = require('mongodb');
-const uri = process.env.MONGO_URI;
-const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
+const { Connection } = require('./connection.js');
+app.use(async function(req, res, next) {
+  await Connection.open();
+  next();
+});
 
 const uid = 8234;
 
@@ -30,43 +31,43 @@ app.post("/insert", async (req, res) => {
     var errorList = [];
     // not using else ifs here because we want to check each condition
     if (tt.length === 0) {
-      errorList.append("Missing Input: Movie's TT is Missing.");
+      errorList.push("Missing Input: Movie's TT is Missing.");
     }
     if (title.length === 0) {
-      errorList.append("Missing Input: Title is Missing.");
+      errorList.push("Missing Input: Title is Missing.");
     }
     if (title.length === 0) {
-      errorList.append("Missing Input: Release year is Missing..");
+      errorList.push("Missing Input: Release year is Missing..");
     }
       
     // if there are no error messages
     if (errorList.length === 0) {
-      await client.connect();
       // use hardcoded uid value for addedby from top of server.js
-      const user = await client.db("wmdb").collection("staff").findOne({uid: uid});
-      const inserted = await client.db("wmdb").collection("movie").insertOne({tt: parseInt(tt), title: title, release: release, addedby: {uid: user.uid, name: user.name}});
-      await client.close();
-      // if the insert was successful
-      if (inserted.acknowledged) {
-        // flash('Form submission successful.')
-        console.log('Form submission successful');
+      const user = await Connection.db.collection("staff").findOne({uid: uid});
+      try {
+        const inserted = await Connection.db.collection("movie").insertOne({
+          tt: parseInt(tt), 
+          title: title, 
+          release: release, 
+          addedby: {uid: user.uid, name: user.name}
+        });
+        console.log('Form submission successful'); // flash
         // store in session ('flashes') :D
         return res.redirect("/update/" + tt);
-      } else {
+      } catch (err) {
         // most likely a duplicate error
-        console.log('Duplicate error');
-        errorList.append("Movie already exists; Movie with tt = " + tt.toString() + " is already in database.");
-        return res.render("insert.html", {error: errorList})
+        console.log('Duplicate error'); // flash
+        errorList.push("Movie already exists; Movie with tt = " + tt.toString() + " is already in database.");
+        return res.render("insert.ejs", {error: errorList})
       }
     } else {
       // re-render the page, displaying any form entry errors we found earlier
-      console.log('invalid inputs');
-      return res.render("insert.html", {error: errorList})
+      console.log('invalid inputs'); // flash
+      return res.render("insert.ejs", {error: errorList})
     }
   } catch (err) {
     // something else has gone wrong somewhere
-    console.log(err);
-    // flash err
+    console.log(err); // flash
     return res.redirect("/")
   }
 });
@@ -84,10 +85,8 @@ app.post("/search", async (req, res) => {
     errorList = ['Sorry, no movies found with a title like "' + query + '".'];
     return res.render("search.ejs", {error: errorList});
   } else {
-    await client.connect();
     // use a regex expression to ignore case and look for partial matches
-    const match = await client.db("wmdb").collection("movie").findOne({title: { $regex: queryRegex}});
-    await client.close();
+    const match = await Connection.db.collection("movie").findOne({title: { $regex: queryRegex}});
     if (match) {
       return res.redirect("/update/" + match.tt);
     } else {
@@ -99,12 +98,10 @@ app.post("/search", async (req, res) => {
 
 
 app.get("/select", async (req, res) => {
-  await client.connect();
   // only select data from tt and title fields
   const projection = { tt: 1, title: 1 };
   // be sure to include the "toArray", or await won't work
-  const incompleteMovies = await client.db("wmdb").collection("movie").find({ $or: [ { release: null }, { director: null } ] }).project(projection).toArray();
-  await client.close();
+  const incompleteMovies = await Connection.db.collection("movie").find({ $or: [ { release: null }, { director: null } ] }).project(projection).toArray();
   return res.render("select.ejs", {error: null, movies: incompleteMovies});
 });
 
@@ -113,16 +110,14 @@ app.post("/select", async (req, res) => {
   try {
     return res.redirect('/update/' + tt);
   } catch (err) {
-    error = ['Movie not found.']
-    return render_template('select.html', {error: error})
+    errorList = ['Movie not found.']
+    return render_template('select.ejs', {error: errorList})
   }
 });
 
 app.get("/update/:movieId", async (req, res) => {
-  await client.connect();
   const movieId = parseInt(req.params.movieId);
-  const foundMovie = await client.db("wmdb").collection("movie").findOne({tt: movieId});
-  await client.close();
+  const foundMovie = await Connection.db.collection("movie").findOne({tt: movieId});
   return res.render("update.ejs", {error: null, movie: foundMovie});
 });
 
@@ -135,16 +130,29 @@ app.post("/update/:movieId", async (req, res) => {
     // updating a movie
     const newTt = parseInt(req.body.movieTt);
     const release = req.body.movieRelease;
-    const addedBy = req.body.movieAddedby;
+    var addedBy = req.body.movieAddedby;
     var directorNm = parseInt(req.body.movieDirector);
-    await client.connect();
+    if ([directorNm, newTt].includes(NaN)) {
+      errorList = ["Director and/or TT value must be a number."];
+      const foundMovie = await Connection.db.collection("movie").findOne({tt: oldTt});
+      return res.render("update.ejs", {error: errorList, movie: foundMovie});
+    }
     // if a director id was entered, find the appropriate director obj
-    if (directorNm) {
+    if (directorNm !== null) {
       // then replace director nm with director object
-      directorNm = await client.db("wmdb").collection("person").findOne({nm: directorNm});
+      directorNm = await Connection.db.collection("people").findOne({nm: parseInt(directorNm)});
+      if (directorNm === null) {
+        errorList = ["Director does not exist"];
+        const foundMovie = await Connection.db.collection("movie").findOne({tt: oldTt});
+        return res.render("update.ejs", {error: errorList, movie: foundMovie});
+      }
+    }
+    // if a addedby uid was entered, find the appropriate staff obj
+    if (addedBy !== null) {
+      addedBy = await Connection.db.collection("staff").findOne({uid: parseInt(addedBy)});
     }
     // update the movie entry in wmdb
-    const updated = await client.db("wmdb").collection("movie").updateOne(
+    const updated = await Connection.db.collection("movie").updateOne(
       {tt: oldTt}, 
       { $set: {
         tt: newTt,
@@ -154,35 +162,28 @@ app.post("/update/:movieId", async (req, res) => {
         director: directorNm
       }}
     );
-    await client.close();
     // if the movie entry was updated successfully 
     if (updated) {
-      console.log('Form submission successful.')
+      console.log('Form submission successful.') // flash
       // we can reroute to newTt regardless of whether the tt was updated or not
       return res.redirect('/update/' + newTt.toString());
     } else {
       // there was an error during updating the db entry, probably because tt already exists
       // so re-render oldTt's update page
       errorList = [updated];
-      await client.connect();
-      const foundMovie = await client.db("wmdb").collection("movie").findOne({tt: oldTt});
-      await client.close();
+      const foundMovie = await Connection.db.collection("movie").findOne({tt: oldTt});
       return res.render("update.ejs", {error: errorList, movie: foundMovie});
     }
   } else {
     // deleting a movie
-    await client.connect();
-    const deleted = await client.db("wmdb").collection("movie").deleteOne({tt: oldTt});
-    await client.close();
+    const deleted = await Connection.db.collection("movie").deleteOne({tt: oldTt});
     // if the movie entry was successfully deleted
     if (deleted) {
-      console.log('Movie (' + title + ') was deleted successfully.');
+      console.log('Movie (' + title + ') was deleted successfully.'); // flash
       return res.render("index.ejs", {error: null});
     } else {
       errorList = [deleted];
-      await client.connect();
-      const foundMovie = await client.db("wmdb").collection("movie").findOne({tt: oldTt});
-      await client.close();
+      const foundMovie = await Connection.db.collection("movie").findOne({tt: oldTt});
       return res.render("update.ejs", {error: errorList, movie: foundMovie});
     }
   }

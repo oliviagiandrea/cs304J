@@ -17,23 +17,16 @@ app.use(bodyParser.json());
 app.use(express.static('public'));
 app.set('view engine', 'ejs');
 
-const { MongoClient, ServerApiVersion } = require('mongodb');
-const uri = process.env.MONGO_URI;
-const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
+const { Connection } = require('./connection.js');
+app.use(async function(req, res, next) {
+  await Connection.open();
+  next();
+});
 
-client.connect(function(err, db) {
-	if (err) throw err;
-  console.log('Connected to Database');
-  const dbo = db.db('wmdb');
-	const staff = dbo.collection('staff');
-  const people = dbo.collection('people');
-  const movies = dbo.collection('movies');
+app.get('/', (req, res) => {
+  return res.render('index.ejs');
+});
 
-  app.get('/', (req, res) => {
-    return res.render('index.ejs');
-  });
-
-  app.listen(3000, function() {
-    console.log('listening on 3000');
-  });
-})
+app.listen(3000, function() {
+  console.log('listening on 3000');
+});

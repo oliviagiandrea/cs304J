@@ -8,10 +8,11 @@ app.use(bodyParser.json());
 app.use(express.static("public"));
 app.set("view engine", "ejs");
 
-const { MongoClient, ServerApiVersion } = require("mongodb");
-// const { MongoClient } = require("mongodb-legacy");
-const uri = process.env.MONGO_URI;
-const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
+const { Connection } = require('./connection.js');
+app.use(async function(req, res, next) {
+  await Connection.open();
+  next();
+});
 
 app.get("/", (req, res) => {
   return res.render("index.ejs", {error: null, movies: null, people: null, query: null});
@@ -20,7 +21,7 @@ app.get("/", (req, res) => {
 app.get("/nm/:personId", async (req, res) => {
   const personId = parseInt(req.params.personId);
   await client.connect();
-  const foundPerson = await client.db("wmdb").collection("people").findOne({nm: personId});
+  const foundPerson = await Connection.db.collection("people").findOne({nm: personId});
   if (!foundPerson) {
     const errorString = "Sorry, no person with that ID is in the database."
     return res.render("index.ejs", {error: errorString, movies: null, people: null, query: null});
@@ -32,7 +33,7 @@ app.get("/nm/:personId", async (req, res) => {
 app.get("/tt/:movieId", async (req, res) => {
   await client.connect();
   const movieId = parseInt(req.params.movieId);
-  const foundMovie = await client.db("wmdb").collection("movie").findOne({tt: movieId});
+  const foundMovie = await Connection.db.collection("movie").findOne({tt: movieId});
   if (!foundMovie) {
     const errorString = "Sorry, no person with that ID is in the database."
     return res.render("index.ejs", {error: errorString, movies: null, people: null, query: null});
@@ -50,7 +51,7 @@ app.get("/query", async (req, res) => {
   await client.connect();
 
   if (kindString === "person") {
-    matches = await client.db("wmdb").collection("people").find({name: { $regex: queryRegex}}).toArray();
+    matches = await Connection.db.collection("people").find({name: { $regex: queryRegex}}).toArray();
     await client.close();
     if (matches.length === 0) {
       errorString = "Sorry, no actors found."
@@ -62,7 +63,7 @@ app.get("/query", async (req, res) => {
     return res.render("index.ejs", {error: null, people: matches, movies: null, query: queryString});
   } else {
     // if we're here, it means kindString === "movie"
-    matches = await client.db("wmdb").collection("movie").find({title: { $regex: queryRegex}}).toArray();
+    matches = await Connection.db.collection("movie").find({title: { $regex: queryRegex}}).toArray();
     await client.close();
     if (matches.length === 0) {
       errorString = "Sorry, no movies found."
